@@ -1,0 +1,53 @@
+body {margin:0px; padding:0px; background-color:#000;}
+
+.background    { background: rgb(52, 166, 251);
+				 background-image: url('../images/brushed-alum.png');
+                 table-layout: fixed;
+                 border-spacing: 0;   }
+.background td { padding: 0;          }
+.lava          { background: rgb(255, 100, 100); 
+				 background-image:url('../images/paper-3.png');
+				 background-size:cover;}
+.wall          { background: white; 
+				 background-image: url('../images/brick-wall.png');
+				   }
+
+.actor  { position: absolute; }
+.coin   { background: rgb(241, 229, 89); border-radius:10px; }
+.player { background: rgb(64, 64, 64);  border-top-left-radius:10px; border-top-right-radius:10px; }
+
+.wrapper {width:1100px; height:800px; left:50%; margin-left:-550px; top:50%; margin-top:-400px; position:absolute;}
+
+.game {
+  z-index:-1;
+  overflow: hidden;
+  width: 950px;
+  height: 800px;
+  position: absolute;
+  left:150px;
+  top:0px;
+  
+  
+}
+.leftBar {
+	width:150px;
+	height:800px;
+	background-color:#fff;
+	background-image: url('../images/brushed-alum.png');
+	z-index:1;
+	box-shadow:1px 1px 10px rgba(0,0,0,0.3);
+	border-right:1px solid #888;
+}
+
+.lost .player {
+  background: rgb(160, 64, 64);
+}
+.won .player {
+  box-shadow: -4px -7px 8px white, 4px -7px 8px white;
+}
+
+.bottom-right-radius{ border-bottom-right-radius: 5px;}
+.bottom-left-radius{ border-bottom-left-radius: 5px;}
+.top-right-radius{ border-top-right-radius: 5px;}
+.top-left-radius{ border-top-left-radius: 5px;}
+

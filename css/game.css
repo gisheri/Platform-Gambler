@@ -51,3 +51,15 @@ body {margin:0px; padding:0px; background-color:#000;}
 .top-right-radius{ border-top-right-radius: 5px;}
 .top-left-radius{ border-top-left-radius: 5px;}
 
+/*
+.pulse {
+	-webkit-animation: pulsate 1s ease-out;
+    -webkit-animation-iteration-count: infinite; 
+}
+
+@-webkit-keyframes pulsate {
+	0% {-webkit-transform: scale(0.9, 0.9);}
+	50% {webkit-transform: scale(1.9,1.9);}
+	100% {-webkit-transform: scale(0.9,0.9);}
+}
+*/

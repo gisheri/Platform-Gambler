@@ -31,7 +31,7 @@ var GAME_LEVELS = [
 
  ["                                   xx                                                                                                    !                                                                                    xx",
   "                                   xx                                                                                                    !                                                                                    xx",
-  "            @                      xx                                                                                                  !!!!!   o o o o                                                                        xx",
+  "                                   xx                                                                                                  !!!!!   o o o o                                                                        xx",
   "                                   xx         xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx    !!!   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                v          v xx",
   "                                   xx        xx                                                                                   xx     !                 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!                      v  v   xx",
   "                                   xx       xx       |                         |               |                                  xx        v                  v   v      v    v       v      v     v   v     v       v    v  xx",
@@ -65,7 +65,7 @@ var GAME_LEVELS = [
   "xx                   xx                      xxx!!!!!xx             !   !   !   !   !   !   !  !!!       v!!!!!!!!!!!v            xx    !!!                                                                       !           xx",
   "xx          xxxx     xx                       xxx!!!!xxxx       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!        !!!!!!!!!              xx     !                                                                        !           xx",
   "xx          xxxx     xx                        xxx!!!xx!!         !   !   !   !   !   !   !    !!!          !!!!!!!               xx                                                                              !        o  xx",
-  "xx                   xx                         xxx!!xx          !   !   !   !   !   !   !     !!            !!!!!                xx                                                                                          xx",
+  "xx                   xx                         xxx!!xx          !   !   !   !   !   !   !     !!            !!!!!                xx                                                                            @             xx",
   "xx                   xx            xxxxxxxx      xxx!xx                                        !              !!!                 xx                                                                                          xx",
   "xxxxxxxxxx           xx            xxxxxxxxx      xxxxxxx                                                      !                  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
   "xxxxxxxxxx           xx            xxxxxxxxxx      xxxx                                                                           xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",

@@ -1,0 +1,192 @@
+<!--
+
+point of game: 
+  kill all the other players
+
+  belongings:
+        coins
+        powerups
+        army
+        lives
+
+  coins: 
+
+  attack:
+    those not in arena can wager
+    attacker chooses from the levels they have beaten to challenge defender
+    attacker chooses how many armies to attack with
+    defender chooses how many armies to defend with
+    defender plays level
+      if lose:
+        attack as normal
+        
+      if win: 
+        armies fight at double, cannot be annihilated, can only lose armies
+
+      if attacker has more attack+level than defender armies+level, defender is annihilated, atacker gains amount of levels of defender + 1level/3 armies killed
+      if attacker does not have enough to annihilate defender: attacker & defender armies cancel out eachother, both gain levels of +1leve/3 armies killed
+
+
+    
+  innerCircle:
+    - easy
+    - medium
+    - +1 life
+
+
+  outerCircle:
+    - hard
+    - x hard
+    - +2 life
+
+  outer outer:
+    arena
+
+  if you beat a level, you keep your card
+  when you enter the arena, you can make your opponent play the level with any of your cards (but you must give it up)
+
+
+  when people are playing levels, you can wager on whether or not you think they'll beat it
+  if I wager 5 coins on someone:
+    if they win, they get my coins
+    if they lose, I get half the coins from them that I wagered
+
+
+
+  draw cards:
+    
+    expert 30
+      +1 life: 3
+      +5 coins: 5
+      +2 level up 4
+      +1 level up 2
+      +2 army: 4
+      +1 army: 3
+      +1 haste 1
+      +1 slow 1
+      +1 double jump 3
+      +1 low jump 1
+      +1 powerup of choice 7
+
+    hard 39
+      +1 life: 1
+      +5 coins: 3
+      +3 coins: 5
+      +2 coins: 4
+      +1 level up 2
+      +2 army: 2
+      +1 army: 3
+      +1 haste 2
+      +1 slow 2
+      +1 double jump 2
+      +1 low jump 2
+      +1 powerup of choice 2
+
+    medium
+      +1/2 life: 2
+      +5 coins: 1
+      +3 coins: 2
+      +2 coins: 5
+      +1 level up 2
+      +1 army: 3
+      +1 haste 2
+      +1 slow 3
+      +1 double jump 1
+      +1 low jump 2
+
+    easy:
+      +1/2 life: 2
+      +3 coins: 2
+      +2 coins: 3
+      +1 coin: 5
+      +1 army: 3
+      +1 haste 2
+      +1 slow 2
+      +1 low jump 2
+
+
+
+
+
+
+-->
+
+
+<!doctype html>
+<html>
+  <head>
+    <title>Black Pawn Platformer</title>
+    <link rel="stylesheet" href="css/game.css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  </head>
+
+<body>
+  <div id="wrapper" class="wrapper">
+    <div class="modal powerups">
+        <h3>Powerups</h3>
+        <div class="power" data-power="haste">Haste</div>
+        <div class="power" data-power="slow">Slow</div>
+        <div class="power" data-power="lowjump">Low Jump</div>
+        <div class="power" data-power="doublejump">Air Jump</div>
+        <!--<div class="power" data-power="duck">Duck</div>-->
+        <!--<div class="power" data-power="shield">Sheild</div>-->
+        <br/>
+        <div class="button finishPowerupsBtn">I'm Ready</div>
+    </div>
+    <div class="leftBar">
+      <h4 class="name"></h4>
+      <hr/>
+      <div class="coins">coins: <span class="coinsEarned"></span> / <span class="coinsPossible"></span></div>
+      <div class="winMessage">
+        <h1>You Win!</h1>
+        <h3>You Got <span class="coinsEarned"></span> Coins! </h3>
+      </div>
+      <div class="lostMessage">
+        <h1>You Lost!</h1>
+        <h3>You Got <span class="coinsEarned"></span> Coins! </h3>
+      </div>
+      <div class="newGame">
+        <input type="text" class="newLevelInput" placeholder="New Level" />
+        <div class="goToLevelBtn button">Go!</div>
+        <div class="retryLevelBtn button ">Retry This Level</div>
+      </div>
+    </div>
+    <div class="progressBar"></div>
+    
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+  <script src="js/game.js"></script>
+
+
+  <script>
+  $(function(){
+
+    if(location.hash){
+      var level = JSON.parse(decodeURIComponent(location.hash.replace("#", "")));
+      runGame(level, DOMDisplay);
+    }
+
+    $('.goToLevelBtn').click(function(){
+      var level = $('.newLevelInput').val();
+      if(!level) alert("That's not a level!");
+      $.ajax({
+        url:'levels/'+level+'.json',
+        dataType: 'json',
+      }).done(function(data){
+        var level = data;
+        runGame(level, DOMDisplay)
+      }).fail(function(data){
+        console.log(data);
+        alert("That's not a level!");
+      })
+
+    })
+    $('.retryLevelBtn').click(function(){
+      if($('.newLevelInput').val()) var level = GAME_LEVELS[$('.newLevelInput').val()];
+      else var level = location.hash ? JSON.parse(decodeURIComponent(location.hash.replace("#", ""))) : null;
+      runGame(level, DOMDisplay);
+    });
+
+  });
+  </script>
+</body>

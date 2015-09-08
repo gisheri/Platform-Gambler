@@ -1,19 +1,24 @@
 Game = {
-  scale: 20,
+  scale: 25,
   maxStep: 0.05,  
   playerXSpeed : 7,
   gravity : 30,
   jumpSpeed : 17,
+  hasStarted: false,
 
 }
 
 var Level = {
-  init: function(plan){
+  init: function(l){
     var level = Object.create(this);
+    var plan = l.layout;
+    level.name = l.name;
     level.width = plan[0].length;
     level.height = plan.length;
     level.grid = [];
     level.actors = [];
+    level.coinsEarned = 0;
+    level.coinsPossible = 0;
 
     for (var y = 0; y < level.height; y++) {
       var line = plan[y],
@@ -29,6 +34,7 @@ var Level = {
           case "o":
             var actor = Coin.init(Vector.init(x, y));
             level.actors.push(actor);
+            level.coinsPossible += 1;
             break;
           case "=":
             var actor = Lava.init(Vector.init(x, y), ch);
@@ -53,16 +59,77 @@ var Level = {
       }
       level.grid.push(gridLine);
     }
+    level.initializeLevelInfo();
+    level.choosePowerups();
 
     level.player = level.actors.filter(function(actor) {
       return actor.type == "player";
     })[0];
     level.status = level.finishDelay = null;
+    
     return level;
   },
 
   isFinished: function(){
     return this.status != null && this.finishDelay < 0;
+  },
+
+  choosePowerups: function(){
+    var level = this;
+    $('.powerups').fadeIn().find('.power').click(function(){
+      var power = $(this).attr("data-power");
+      var hasPower = level.player.abilities[power];
+      if(hasPower) {
+        $(this).removeClass('active');
+        level.player.removeAbility(power);
+      } else {
+        $(this).addClass('active');
+        level.player.addAbility(power);
+      }
+    })
+    $('.finishPowerupsBtn').click(function(){
+      Game.hasStarted = true;
+      $('.powerups').fadeOut();
+      $('.progressBar').animate({width:0}, 60000, 'linear');
+      level.timer = setTimeout(function(){
+        if(!level.status) level.status = "lost";
+        level.finishDelay = 1;
+      },60000)
+    })
+  },
+
+  initializeLevelInfo: function(){
+    $('.name').html(this.name);
+    $('.coins').show();
+    $('.coinsEarned').text(this.coinsEarned);
+    $('.coinsPossible').text(this.coinsPossible);
+    $('.leftBar').css({width:130});
+    $('.winMessage, .lostMessage, .newGame').hide();
+    $('.retryLevelBtn').show();
+    $('.progessBar').css({width:'100%'});
+  },
+
+  updateLevelInfo: function(){
+    $('.coinsEarned').text(this.coinsEarned);
+    $('.coinsPossible').text(this.coinsPossible);
+  },
+
+  showWin: function(){
+    $('.leftBar').animate({width:'100%'});
+    $('.winMessage').fadeIn();
+    $('.newGame').fadeIn();
+    $('.power').removeClass('active');
+    $('.progressBar').stop().css({width:'100%'});
+    clearTimeout(this.timer);
+  },
+
+  showLost:function(){
+    $('.leftBar').animate({width:'100%'});
+    $('.lostMessage').fadeIn();
+    $('.newGame').fadeIn();
+    $('.power').removeClass('active');
+    $('.progressBar').stop().css({width:'100%'});
+    clearTimeout(this.timer);
   },
 
   obstacleAt: function(pos, size){
@@ -110,15 +177,16 @@ var Level = {
 
   playerTouched: function(type, actor){
     if (type == "lava" && this.status == null) {
+      console.log(actor);
       this.status = "lost";
       this.finishDelay = 1;
     } else if (type == "coin") {
+      this.coinsEarned += 1;
+      this.updateLevelInfo();
       this.actors = this.actors.filter(function(other) {
         return other != actor;
       });
-      if (!this.actors.some(function(actor) {
-        return actor.type == "coin";
-      })) {
+      if (!this.actors.some(function(actor) { return actor.type == "coin";})) {
         this.status = "won";
         this.finishDelay = 1;
       }
@@ -159,27 +227,33 @@ var Player = {
       jumpHeight: 17,
     };
     player.abilities = {
-      highjump: true,
-      lowjump: true,
-      doublejump: true,
-      duck: true,
-      haste: true,
-      dash:true,
+      highjump: false,
+      lowjump: false,
+      doublejump: false,
+      duck: false,
+      haste: false,
+      dash:false,
+      slow:false
     };
+    player.achievements = {
+      coins: 0,
+    }
 
     return player;
   },
   moveX: function(step, level, keys){
     this.speed.x = 0;
-    if (keys.left) this.speed.x -= this.stats.xSpeed;
-    if (keys.right) this.speed.x += this.stats.xSpeed;
-    if(keys.space) this.speed.x *=2;
+      if (keys.left) this.speed.x -= this.stats.xSpeed;
+      if (keys.right) this.speed.x += this.stats.xSpeed;
+      if (this.abilities.haste && keys.space) this.speed.x *=2;
+      if (this.abilities.slow && keys.shift) this.speed.x /=2;
 
     var motion = Vector.init(this.speed.x * step, 0);
     var newPos = this.pos.plus(motion);
     var obstacle = level.obstacleAt(newPos, this.size);
-    if (obstacle)
+    if (obstacle){
       level.playerTouched(obstacle);
+    }
     else
       this.pos = newPos;
   },
@@ -189,12 +263,11 @@ var Player = {
     var newPos = this.pos.plus(motion);
     var obstacle = level.obstacleAt(newPos, this.size);
     
-   
     if (obstacle) {
       level.playerTouched(obstacle);
       if (keys.up && this.speed.y > 0)
         this.speed.y = -this.stats.jumpHeight;
-      else if(keys.down && this.speed.y >0)
+      else if(this.abilities.lowjump && keys.down && this.speed.y >0)
         this.speed.y = -this.stats.jumpHeight/1.5;
       else
         this.speed.y = 0;
@@ -203,7 +276,7 @@ var Player = {
         if(keys.up && this.speed.y > 0){
           this.speed.y = -this.stats.jumpHeight;
         }
-        if(keys.down && this.speed.y > 0){
+        if(this.abilities.lowjump && keys.down && this.speed.y > 0){
           this.speed.y = -this.stats.jumpHeight/1.5;
         }
       }
@@ -211,12 +284,15 @@ var Player = {
     }
   },
   act: function(step, level, keys){
+    if(!Game.hasStarted) return false;
     this.moveX(step, level, keys);
     this.moveY(step, level, keys);
 
     var otherActor = level.actorAt(this);
-    if (otherActor)
+    if (otherActor){
+      console.log('acted into something');
       level.playerTouched(otherActor.type, otherActor);
+    }
 
     // Losing animation
     if (level.status == "lost") {
@@ -224,10 +300,18 @@ var Player = {
       this.size.y -= step;
     }
   },
-  gainAbility: function(ability){
+  addAbility: function(ability){
     this.abilities[ability] = true;
-
+    if(ability == "shield"){
+      //put a sheild on
+    }
   },
+  removeAbility: function(ability){
+    this.abilities[ability] = false;
+    if(ability == "shield"){
+      //remove sheild
+    }
+  }
 
 }
 
@@ -251,6 +335,7 @@ var Lava = {
   },
 
   act: function(step, level){
+    if(!Game.hasStarted) return false;
     var newPos = this.pos.plus(this.speed.times(step));
     if (!level.obstacleAt(newPos, this.size))
       this.pos = newPos;
@@ -278,6 +363,7 @@ var Coin = {
     return coin;
   },
   act: function(step){
+    if(!Game.hasStarted) return false;
     this.wobble += step * this.wobbleSpeed;
     var wobblePos = Math.sin(this.wobble) * this.wobbleDist;
     this.pos = this.basePos.plus(Vector.init(0, wobblePos));
@@ -409,11 +495,16 @@ var DOMDisplay = {
 
 var arrowCodes = {
     37: "left",
+    65: "left",
     38: "up",
+    87: "up",
     39: "right",
+    68: "right",
     40: "down",
+    83: "down",
     16: "shift",
     32: "space",
+    17: "ctrl",
     13: "enter",
   };
 
@@ -455,6 +546,10 @@ function runLevel(level, Display, andThen) {
     level.animate(step, arrows);
     display.drawFrame(step);
     if (level.isFinished()) {
+      if(level.status == 'won')
+        level.showWin();
+      else if(level.status == 'lost')
+        level.showLost();
       display.clear();
       if (andThen)
         andThen(level.status);
@@ -463,18 +558,14 @@ function runLevel(level, Display, andThen) {
   });
 }
 
-function runGame(plans, Display) {
-  function startLevel(n) {
-    runLevel(Level.init(plans[n]), Display, function(status) {
-      if (status == "lost")
-        startLevel(n);
-      else if (n < plans.length - 1)
-        startLevel(n + 1);
-      else
-        console.log("You win!");
+function runGame(level, Display) {
+  function startLevel(level) {
+    runLevel(Level.init(level), Display, function(status) {
+      //if (status == "lost")
+        //startLevel(level);
     });
   }
-  startLevel(0);
+  startLevel(level);
 }
 
 

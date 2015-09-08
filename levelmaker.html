@@ -1,1 +1,317 @@
-levelmaker.html
+<!doctype html>
+<html>
+  <head>
+    <title>Black Pawn Platformer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+    	body {background-color: #6EB3E6; margin:0px; padding:0px; font-family:'Arial Black', "helvetica", "sans-serif";}
+    	.topBar {background-color: #A8D3F3; padding: 15px;border-bottom: 1px solid #557F9E;}
+    	input {padding:3px; border-radius:3px;}
+    	table {border-collapse: collapse; table-layout: fixed; border-spacing: 0; background-color: #6EB3E6;}
+    	td {height:25px; text-align:center; vertical-align:middle;}
+    	table, th, td {border:1px solid #669DC5;}
+
+    	td {
+    		cursor:default;
+		    -webkit-touch-callout: none;
+		    -webkit-user-select: none;
+		    -khtml-user-select: none;
+		    -moz-user-select: none;
+		    -ms-user-select: none;
+		    user-select: none;
+		}
+
+
+    	.materials {padding:15px; background-color: #A8D3F3; padding: 15px;border-bottom: 1px solid #557F9E; }
+    	.material {width:25px; height:25px; border-radius:5px; border:1px solid #555; text-align:center;}
+    	.materialWrap {padding:5px; border-radius:5px; display:inline-block; vertical-align:middle; margin-right:10px; cursor:pointer;}
+    	.materialWrap.active {background-color:#fff; }
+
+    	.wall {background-color:#fff;}
+    	.coin {background-color:#EAFF00;}
+    	.air {background-color:transparent}
+    	.lava, .lava-horizontal, .lava-down, .lava-vertical {background-color:#c00;}
+    	.start {background-color:#000;}
+    	.finish {background-color:#0c0;}
+	</style>
+
+  </head>
+
+<body>
+  <div id="wrapper" class="wrapper">
+   	<div class="topBar">
+   		Name: <input type="text" id="name" placeholder="level name">&nbsp; &nbsp; 
+   		Difficulty (1-10): <input type="number" id="difficulty" placeholder="difficulty">&nbsp; &nbsp; 
+   		Required Powerups: 
+	   		<input type="checkbox" name="powerups" value="haste" />Haste &nbsp;
+	   		<input type="checkbox" name="powerups" value="slow" />Slow &nbsp;
+	   		<input type="checkbox" name="powerups" value="doublejump" />Double Jump &nbsp;
+	   		<input type="checkbox" name="powerups" value="lowjump" />Low Jump &nbsp;
+
+	   	<button class="saveLevelBtn">Save Level</button>
+	   	<button class="previewLevelBtn">Preview Level</button>
+	</div>
+	<div class="materials">
+		<div class="materialWrap" data-material=""> Air: <div class="material air"> </div></div>
+		<div class="materialWrap active" data-material="wall"> Wall: <div class="material wall">x</div></div>
+		<div class="materialWrap" data-material="coin"> Coin: <div class="material coin">o</div></div>
+		<div class="materialWrap" data-material="lava"> Lava: <div class="material lava">!</div></div>
+		<div class="materialWrap" data-material="lava-down"> Lava Down: <div class="material lava">v</div></div>
+		<div class="materialWrap" data-material="lava-horizontal"> Lava Horizontal: <div class="material lava">=</div></div>
+		<div class="materialWrap" data-material="lava-vertical"> Lava Vertical: <div class="material lava">|</div></div>
+		<div class="materialWrap" data-material="start"> Start: <div class="material start">@</div></div>
+		<div class="materialWrap" data-material="finish"> Finish: <div class="material finish">*</div></div>
+	</div>
+  </div>
+  <div class="outputWrapper">
+	<textarea id="output" style="height:600px; width:800px;"></textarea>
+  </div>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+  <script>
+  	$(function(){
+
+  		mouseIsDown = false;
+
+  		var grid = {
+  			init: function(level){
+  				var grid = Object.create(this);
+  				
+				grid.element = grid.render();
+				grid.currType = "wall";
+  				if(level){
+  					grid.layout = [];
+  					$.each(level.layout, function(k, row){
+  						var rowElement = $('<tr></tr>');
+  						grid.element.append(rowElement);
+  						var gridRow = [];
+  						$.each(row, function(j, item){
+  							gridRow.push(block.init(item, rowElement, grid));
+  						})
+  						grid.layout.push(gridRow);
+  					})
+  				} else {
+  					grid.layout = [];
+  					for(var i=0;i<30;i++){
+  						var rowElement = $('<tr></tr>');
+  						grid.element.append(rowElement);
+  						var row = [];
+  						for(var j=0;j<60;j++){
+  							row.push(block.init(" ", rowElement, grid));
+  						}
+  						grid.layout.push(row);
+  					}
+  				}
+  				grid.element.css({width:grid.layout[0].length*25})
+
+  			},
+  			render: function(){
+  				var grid = this;
+  				var element = $('<table></table>');
+  				$('.wrapper').append(element);
+  				
+
+  				$('.materialWrap').click(function(){
+		  			console.log('clicked');
+		  			$('.materialWrap').removeClass('active');
+		  			$(this).addClass('active');
+		  			grid.currType = $(this).attr("data-material");
+		  		});
+
+  				$('.saveLevelBtn').click(function(){
+  					if(!grid.findBlock('start') || !grid.findBlock('finish')) 
+  						alert('please place a start and end block');
+  					else 
+  						grid.createOutput();
+  				})
+
+  				$('.previewLevelBtn').click(function(){
+  					var starting = grid.findBlock('start');
+  					var ending = grid.findBlock('finish');
+  					if(!starting.length || !ending.length) 
+  						alert('please place a start and end block');
+  					else {
+	  					var output = JSON.stringify(grid.createOutput());
+	  					window.open('play.html#'+encodeURIComponent(output), '_blank');
+	  				}
+  				})
+
+		  		return element;
+  			},
+  			createOutput:function(){
+  				var grid = this;
+  				var layout = [];
+  				$.each(grid.layout, function(k, row){
+  					var rowString = "";
+  					$.each(row, function(j, block){
+  						rowString+=block.character;
+  					})
+  					layout.push(rowString);
+  				})
+  				var output = {
+  					name: $('#name').val(),
+  					difficulty: $('#difficulty').val(),
+  					coins: $('td.coin').length,
+  					powerups: $('input[name="powerups"]').val(),
+  					layout: layout
+  				}
+  				//console.log(JSON.stringify(output));
+  				$('#output').val(JSON.stringify(output));
+  				return output;
+  			},
+  			findBlock: function(type){
+  				var grid = this;
+  			  	var matches = [];
+  			  	$.each(grid.layout, function(k, row){
+  			  		$.each(row, function(k, block){
+  			  			if(block.type == type) matches.push(block);
+  			  		})
+  			  	});
+  			  	return matches;
+  			}
+  		}
+  		var block = {
+  			init: function(character, row, grid){
+  				var block = Object.create(this);
+  				block.row = row;
+  				block.grid = grid;
+  				block.character = character;
+  				block.type = block.getType();
+  				block.render();
+  				return block;
+  			},
+  			render: function(){
+  				var block = this;
+  				if(!this.element) {
+  					this.element = $('<td></td>');
+  					this.row.append(this.element);
+  				}
+
+  				this.element.removeClass('lava wall lava-horizontal lava-vertical finish start coin');
+  				this.element.addClass(this.type);
+  				var character = this.getCharacter();
+  				this.element.html(character);
+
+  				this.element.click(function(){
+  					block.setType(block.grid.currType);
+  				});
+
+  				this.element.mouseover(function(){
+  					if(mouseIsDown){
+	  					console.log(block.grid.currType);
+	  					block.setType(block.grid.currType);
+	  				}
+  				});
+
+  			},
+  			setType: function(type){
+  				
+
+  				switch(type){
+  					case "start":
+  						var startingBlocks = this.grid.findBlock('start');
+  						$.each(startingBlocks, function(k, block){
+  							block.setType(null);
+  						})
+  						break;
+  					case "finish":
+  						var finishingBlocks = this.grid.findBlock('finish');
+  						$.each(finishingBlocks, function(k, block){
+  							block.setType(null);
+  						})
+  						break;
+  				}
+  				this.type = type;
+  				this.character = this.getCharacter();
+  				this.render();
+
+  			},
+  			getType: function(){
+  				switch(this.character) {
+  					case " ":
+  						return null;
+  						break;
+  					case "@":
+  						return "start";
+  						break;
+  					case "o":
+  						return "coin";
+  						break;
+  					case "*":
+  						return "finish";
+  						break;
+  					case "!":
+  						return "lava";
+  						break;
+  					case "v":
+  						return "lava-down";
+  						break;
+  					case "=":
+  						return "lava-horizontal";
+  						break;
+  					case "|":
+  						return "lava-vertical";
+  						break;
+  					case "x":
+  						return "wall";
+  						break;
+  					default:
+  						return null;
+  						break;
+  				}
+  			},
+  			getCharacter: function(){
+  				switch(this.type) {
+  					case null:
+  						return " ";
+  						break;
+  					case "start":
+  						return "@";
+  						break;
+  					case "coin":
+  						return "o";
+  						break;
+  					case "finish":
+  						return "*";
+  						break;
+  					case "lava":
+  						return "!";
+  						break;
+  					case "lava-down":
+  						return "v";
+  						break;
+  					case "lava-horizontal":
+  						return "=";
+  						break;
+  					case "lava-vertical":
+  						return "|";
+  						break;
+  					case "wall":
+  						return "x";
+  						break;
+  					default:
+  						return " ";
+  						break;
+  				}
+  			}
+  		}
+
+  		grid.init();
+
+
+  		/** EVENTS  **/
+
+
+  		$(document).mousedown(function(){
+  			mouseIsDown = true;
+  		});
+
+  		$(document).mouseup(function(){
+  			mouseIsDown = false;
+  		})
+
+
+
+  	})
+  </script>
+
+</body>
